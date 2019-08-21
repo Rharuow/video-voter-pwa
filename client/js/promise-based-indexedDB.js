@@ -1,4 +1,4 @@
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const DB_NAME = "vid-voter";
 
 const openDB = () => {
@@ -16,8 +16,8 @@ const openDB = () => {
         request.onupgradeneeded = (event) => {
             const db = event.target.result;
 
-            if (!db.objectStoreNames.contains("votes")) {
-                db.createObjectStore("votes", {keyPath: "id"});
+            if (!db.objectStoreNames.contains("videos")) {
+                db.createObjectStore("videos", {keyPath: "id"});
             }
         };
 
@@ -87,14 +87,15 @@ const getVideos = () => {
                     } else {
                         getVideosFromServer().then((videos) => {
                             for (const video of videos) {
-                                store.add(video);
+                                addObject("videos", video);
                             }
                             resolve(videos);
                         });
                     }
                 }
             }
-        }).catch(function() {
+        }).catch(function(e) {
+            console.error(e);
             getVideosFromServer().then((videos) => {
                 resolve(videos);
             });

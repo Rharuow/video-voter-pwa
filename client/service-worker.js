@@ -32,6 +32,7 @@ const URLS_OVER_NETWORK_WITH_CACHE_FALLBACK = [
     "/css/cover.css",
     "/js/app.js",
     "/js/voter/voter.js",
+    "/js/promise-based-indexedDB.js",
     "http://localhost:3000/videos"
 ];
 
