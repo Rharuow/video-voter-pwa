@@ -28,7 +28,7 @@ const appRouter = (app) => {
 
     app.post("/videos", (req, res) => {
         data.push({
-            id: idIndex++,
+            id: req.body.id,
             title: req.body.title,
             link: req.body.link,
             points: 0

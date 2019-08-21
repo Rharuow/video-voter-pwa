@@ -3,11 +3,11 @@ const DB_NAME = "vid-voter";
 
 const openDB = () => {
     return new Promise((resolve, reject) => {
-        if (!window.indexedDB) {
+        if (!self.indexedDB) {
             reject("IndexedDB not supported");
         }
 
-        const request = window.indexedDB.open(DB_NAME, DB_VERSION);
+        const request = self.indexedDB.open(DB_NAME, DB_VERSION);
 
         request.onerror = (event) => {
             reject("DB error: " + event.target.error);
@@ -94,7 +94,7 @@ const getVideos = () => {
                     }
                 }
             }
-        }).catch(function(e) {
+        }).catch(function (e) {
             console.error(e);
             getVideosFromServer().then((videos) => {
                 resolve(videos);
@@ -104,5 +104,16 @@ const getVideos = () => {
 };
 
 const getVideosFromServer = () => {
-    return new Promise((resolve) => $.getJSON("http://localhost:3000/videos", resolve));
+    return new Promise((resolve) => {
+            if (self.$) {
+                $.getJSON("http://localhost:3000/videos", resolve)
+            } else if (self.fetch) {
+                fetch("http://localhost:3000/videos").then((response) => {
+                    return response.json();
+                }).then(function (videos) {
+                    resolve(videos);
+                });
+            }
+        }
+    );
 };

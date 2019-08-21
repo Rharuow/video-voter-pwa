@@ -5,19 +5,25 @@ $(document).ready(function () {
 });
 
 const loadVideoList = () => {
-    $.getJSON("http://localhost:3000/videos", renderVideos);
+    getVideos().then(renderVideos);
 };
 
 const addVideo = () => {
     const titleInput = $("#title");
     const urlInput = $("#url");
     const postData = {
+        id: +Date.now().toString().substring(3, 11),
         title: titleInput.val(),
-        link: urlInput.val()
+        link: urlInput.val(),
+        points: 0
     };
 
     titleInput.val('');
     urlInput.val('');
+
+    // Add video to the object store
+    addObject("videos", postData)
+        .catch(e => console.error(e));
 
     $.ajax({
        type: 'POST',
