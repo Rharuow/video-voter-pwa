@@ -1,3 +1,5 @@
+importScripts("/js/promise-based-indexedDB.js");
+
 const CACHE_NAME = 'vid-voter-v3';
 const URLS_CACHE_ONLY = [
     "/css/bootstrap.min.css",
@@ -36,9 +38,9 @@ const URLS_OVER_NETWORK_WITH_CACHE_FALLBACK = [
     "http://localhost:3000/videos"
 ];
 
-self.addEventListener("install", function(event) {
+self.addEventListener("install", function (event) {
     event.waitUntil(
-        caches.open(CACHE_NAME).then(function(cache) {
+        caches.open(CACHE_NAME).then(function (cache) {
             return cache.addAll(URLS_CACHE_ONLY.concat(URLS_OVER_NETWORK_WITH_CACHE_FALLBACK));
         }).catch((err) => {
             console.error(err);
@@ -53,7 +55,7 @@ self.addEventListener("fetch", function (event) {
     const requestURL = new URL(event.request.url);
 
     if (requestURL.pathname === '/') {
-      event.respondWith(getByNetworkFallingBackByCache("/index.html"));
+        event.respondWith(getByNetworkFallingBackByCache("/index.html"));
     } else if (URLS_OVER_NETWORK_WITH_CACHE_FALLBACK.includes(requestURL.href) || URLS_OVER_NETWORK_WITH_CACHE_FALLBACK.includes(requestURL.pathname)) {
         event.respondWith(getByNetworkFallingBackByCache(event.request));
     } else if (URLS_CACHE_ONLY.includes(requestURL.href) || URLS_CACHE_ONLY.includes(requestURL.pathname)) {
@@ -73,6 +75,12 @@ self.addEventListener("activate", function (event) {
             );
         })
     );
+});
+
+self.addEventListener("sync", function (event) {
+    if (event.tag === "sync-videos") {
+        event.waitUntil(syncVideos());
+    }
 });
 
 /**
@@ -111,4 +119,23 @@ const getByCacheOnly = (request) => {
             return response;
         });
     });
+};
+
+const syncVideos = () => {
+    return getVideos("idx_status", "sending").then((videos) => {
+        return Promise.all(videos.map((video) => {
+                return syncVideo(video)
+                    .then((newVideo) => updateObject("videos", newVideo.id, newVideo));
+            })
+        );
+    });
+};
+
+const syncVideo = (video) => {
+    return fetch('http://localhost:3000/videos', {
+        method: 'post',
+        body: JSON.stringify(video)
+    }).then(function (response) {
+        return response.json();
+    })
 };

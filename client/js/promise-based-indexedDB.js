@@ -15,10 +15,19 @@ const openDB = () => {
 
         request.onupgradeneeded = (event) => {
             const db = event.target.result;
+            const upgradeTransaction = event.target.transaction;
+            let videoStore;
 
             if (!db.objectStoreNames.contains("videos")) {
-                db.createObjectStore("videos", {keyPath: "id"});
+                videoStore = db.createObjectStore("videos", {keyPath: "id"});
+            } else {
+                videoStore = upgradeTransaction.objectStore("videos");
             }
+
+            if (!videoStore.indexNames.contains("idx_status")) {
+                videoStore.createIndex("idx_status", "status", { unique: false });
+            }
+
         };
 
         request.onsuccess = (event) => {
@@ -71,12 +80,39 @@ const deleteObject = (storeName, id) => {
     });
 };
 
-const getVideos = () => {
+var getReservations = function(indexName, indexValue) {
+    return new Promise(function(resolve) {
+        openDatabase().then(function(db) {
+            var objectStore = openObjectStore(db, "reservations");
+            var reservations = [];
+            var cursor;
+            if (indexName && indexValue) {
+                cursor = objectStore.index(indexName).openCursor(indexValue);
+            } else {
+                cursor = objectStore.openCursor();
+            }
+            cursor.onsuccess = function(event) {
+                var cursor = event.target.result;
+                if (cursor) {
+                    reservations.push(cursor.value);
+                    cursor.continue();
+                }
+            };
+        })
+    });
+};
+
+const getVideos = (indexName, indexValue) => {
     return new Promise(resolve => {
         openDB().then(db => {
             const store = openObjectStore(db, "videos", "readwrite");
             const videos = [];
-            store.openCursor().onsuccess = (event) => {
+
+            const openCursor = indexName && indexValue ?
+                store.index(indexName).openCursor(indexValue) :
+                store.openCursor();
+
+            openCursor.openCursor().onsuccess = (event) => {
                 const cursor = event.target.result;
                 if (cursor) {
                     videos.push(cursor.value);

@@ -3,19 +3,22 @@ let data = [
         id: 1,
         title: "Selena Gomez - Wolves",
         link: "https://www.youtube.com/watch?v=cH4E_t3m3xM",
-        points: 0
+        points: 0,
+        status: "send"
     },
     {
         id: 2,
         title: "Lukas Graham - Mama Said",
         link: "https://www.youtube.com/watch?v=HdAkYCyCZv8",
-        points: 0
+        points: 0,
+        status: "send"
     },
     {
         id: 3,
         title: "Alex Clare - Too Close",
         link: "https://www.youtube.com/watch?v=zP50Ewh31E4",
-        points: 0
+        points: 0,
+        status: "send"
     }
 ];
 
@@ -27,14 +30,16 @@ const appRouter = (app) => {
     });
 
     app.post("/videos", (req, res) => {
-        data.push({
+        const vid = {
             id: req.body.id,
             title: req.body.title,
             link: req.body.link,
-            points: 0
-        });
+            points: 0,
+            status: "send"
+        };
+        data.push(vid);
 
-        res.status(200).send(JSON.stringify(sortVideos()));
+        res.status(200).send(vid);
     });
 
     app.post("/videos/:id/up", (req, res) => {

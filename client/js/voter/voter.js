@@ -15,7 +15,8 @@ const addVideo = () => {
         id: +Date.now().toString().substring(3, 11),
         title: titleInput.val(),
         link: urlInput.val(),
-        points: 0
+        points: 0,
+        status: "sending"
     };
 
     titleInput.val('');
@@ -25,14 +26,20 @@ const addVideo = () => {
     addObject("videos", postData)
         .catch(e => console.error(e));
 
-    $.ajax({
-       type: 'POST',
-       url: 'http://localhost:3000/videos',
-       data: JSON.stringify(postData),
-       success: renderVideos,
-       contentType: 'application/json',
-       dataType: 'json'
-    });
+    if ("serviceWorker" in navigator && "SyncManager" in window) {
+        navigator.serviceWorker.ready.then(function(registration) {
+            registration.sync.register("sync-videos");
+        });
+    } else {
+        $.ajax({
+            type: 'POST',
+            url: 'http://localhost:3000/videos',
+            data: JSON.stringify(postData),
+            success: renderVideos,
+            contentType: 'application/json',
+            dataType: 'json'
+        });
+    }
 };
 
 const vote = (votingUp, id) => {
